@@ -52,12 +52,12 @@ $ sudo ./install_u1404_basic.sh
 
 ## How to compile and run the project
 ### 1. Compile
-1.* In gpsCalibration module, you can:*
+1.*In gpsCalibration module, you can:*
 ```
 $ cd modules/gpsCalibration
 $ catkin_make 
 ```
-2.* In feature map building module, you can:*
+2.*In feature map building module, you can:*
 ```
 $ cd modules/featureMap
 $ catkin_make 
