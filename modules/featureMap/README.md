@@ -22,10 +22,21 @@ $ tar -zvxf demo_data_for_feature_map.tar.gz
 ```
 
 2.*Open the run.sh in directory "modules/featureMap" and set needed file directory correctly.*
-
-3.*In directory "modules/featureMap", run commands:*
-
 ```
+    User Parameters:
+    Input filenames:
+    1. bag_input_filename:
+       input point cloud bag file
+       bag_input_filename= "./data/gnss_lidar_points.bag"
+       
+    Output filenames:
+	1. feature_output_filename:
+       featute data in cells
+       feature_output_filename="./data/featureMap.txt"
+```
+3.*In directory "modules/featureMap", run commands:*
+```
+$ export ROS_HOME=./
 $ ./run.sh
 ```
 
@@ -37,4 +48,4 @@ $ ./run.sh
   We show feature maps of demo data we have done. 
 
 #### 3.1 Featur map results
-![image](https://raw.githubusercontent.com/iMorpheusAI/gpsCalibration/develop/demo/demo.gif)
+![image](https://raw.githubusercontent.com/taichenliu/gpsCalibration/develop/demo/img.bmp)
