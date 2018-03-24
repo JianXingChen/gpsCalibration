@@ -36,4 +36,4 @@ $ ./run.sh
   We show a result we have done. 
 
 #### 3.1 Featur map results
-![image](https://raw.githubusercontent.com/iMorpheusAI/gpsCalibration/develop/demo/demo.gif)
+![image](https://raw.githubusercontent.com/taichenliu/gpsCalibration/develop/demo/img.bmp)
