@@ -1,0 +1,4 @@
+geometry_msgs/Point CentorPoint
+geometry_msgs/Vector3 DirectionVector
+int32 lineNo
+bool isStraight

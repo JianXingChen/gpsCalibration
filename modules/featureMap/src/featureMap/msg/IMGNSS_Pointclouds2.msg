@@ -1,0 +1,4 @@
+geometry_msgs/Pose pose
+sensor_msgs/PointCloud2 surround_points
+float64 poseWeight
+ChipLineInformation LineInformation

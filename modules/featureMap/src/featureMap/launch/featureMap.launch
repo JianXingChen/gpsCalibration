@@ -1,0 +1,19 @@
+<launch>
+  <arg name="bag_input_filename"/>
+
+  <arg name="feature_output_filename"/>
+
+  <node pkg="featureMap" type="lineSelect" name="lineSelect" output="screen" args="$(arg bag_input_filename)"/>
+
+  <node pkg="featureMap" type="scanRegistration" name="scanRegistration" output="screen"/>
+
+  <node pkg="featureMap" type="laserOdometry" name="laserOdometry" output="screen" respawn="true">
+  </node>
+
+  <node pkg="featureMap" type="laserMapping" name="laserMapping" output="screen"/>
+
+  <node pkg="featureMap" type="transformMaintenance" name="transformMaintenance" output="screen"/>
+
+  <node pkg="featureMap" type="featureExtract" name="featureExtract" output="screen" args="$(arg feature_output_filename)"/>
+
+</launch>

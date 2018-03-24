@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(gpsCalibration)
+project(featureMap)
 
 ## Add support for C++11, supported in ROS Kinetic and newer
 add_definitions(-std=c++11)
@@ -57,20 +57,19 @@ find_package(OpenCV REQUIRED)
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
-   IMLocalXYZT.msg
-   IMLocalXYZTW.msg
-   IMMessage.msg
-   IMTrack.msg
-   IMGPS.msg
+   IMGNSS_Pointclouds2.msg
+   ChipLineInformation.msg
    IMControl.msg
+   SVDPoints.msg
  )
 
 ## Generate added messages and services with any dependencies listed here
  generate_messages(
    DEPENDENCIES
    std_msgs
+   nav_msgs
+   sensor_msgs
  )
-
 
 catkin_package(
 #  INCLUDE_DIRS include
@@ -86,7 +85,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include/gpsCalibration)
+include_directories(include/featureMap)
 include_directories(
   ${catkin_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
@@ -94,109 +93,34 @@ include_directories(
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
-   src/gps_calibration/common.cpp
-   src/gps_calibration/gps_process.cc
-   src/gps_calibration/track_calibration.cc
-   src/gps_calibration/weight_calculation.cc
+   lib/ENU2Local.cpp
+   lib/CellInfo.cpp
+   lib/LineInfo.cpp
+   lib/FeatureMapFusion.cpp
  )
-target_link_libraries(${PROJECT_NAME} PUBLIC xml2)
+target_link_libraries(${PROJECT_NAME} PUBLIC)
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(long_distance_track_process_node src/long_distance_track_process/long_distance_track_process.cpp)
-add_dependencies(long_distance_track_process_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_executable(lineSelect src/lineSelect.cpp)
+target_link_libraries(lineSelect ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
+add_dependencies(lineSelect ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(input_data_node src/lidar_slam/input_data/input_data.cpp)
-add_dependencies(input_data_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-add_executable(short_distance_track_process_node src/short_distance_track_process/short_distance_track_process.cpp)
-add_dependencies(short_distance_track_process_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-add_executable(scanRegistration src/lidar_slam/loam/scanRegistration.cpp)
+add_executable(scanRegistration src/scanRegistration.cpp)
 target_link_libraries(scanRegistration ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
 add_dependencies(scanRegistration ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(laserOdometry src/lidar_slam/loam/laserOdometry.cpp)
+add_executable(laserOdometry src/laserOdometry.cpp)
 target_link_libraries(laserOdometry ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
 add_dependencies(laserOdometry ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(laserMapping src/lidar_slam/loam/laserMapping.cpp)
+add_executable(laserMapping src/laserMapping.cpp)
 target_link_libraries(laserMapping ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
 add_dependencies(laserMapping ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(transformMaintenance src/lidar_slam/loam/transformMaintenance.cpp)
+add_executable(transformMaintenance src/transformMaintenance.cpp)
 target_link_libraries(transformMaintenance ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
 add_dependencies(transformMaintenance ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-## Rename C++ executable without prefix
-## The above recommended prefix causes long target names, the following renames the
-## target back to the shorter version for ease of user use
-## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
-# set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
-
-## Add cmake target dependencies of the executable
-## same as for the library above
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(long_distance_track_process_node
-    ${catkin_LIBRARIES}
-    xml2
-    gpsCalibration
-)
-target_link_libraries(short_distance_track_process_node
-     ${catkin_LIBRARIES}
-     xml2
-     gpsCalibration
-)
-
-target_link_libraries(input_data_node
-    ${catkin_LIBRARIES}
-    xml2
-)
-
-#############
-## Install ##
-#############
-
-# all install targets should use catkin DESTINATION variables
-# See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
-
-## Mark executable scripts (Python etc.) for installation
-## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark executables and/or libraries for installation
-# install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
-
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
-
-#############
-## Testing ##
-#############
-
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_gpsCalibration.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
+add_executable(featureExtract src/featureExtract.cpp)
+target_link_libraries(featureExtract ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS} ${PROJECT_NAME})
+add_dependencies(featureExtract ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
