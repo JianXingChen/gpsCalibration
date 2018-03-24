@@ -1,37 +1,39 @@
 # iMorpheus.ai - high availability sub-meter precise GPS
-## Show Feature Map
+## Draw Feature Map
 ![License](https://img.shields.io/badge/License-Apache2.0-blue.svg)
 
 ## Current Version - alpha
-The alpha version is to show feature map built in module-featureMap.<br/>
+The alpha version is to show feature map in 2d.<br/>
 
 ## How to compile and run
 ### 1. Compile
 ```
-$ cd drawFeatureMap
+$ mkdir build
+$ cmake ../
 $ make
 ```
 ### 2. Run
-1.*Make sure you have right feature data. It includes specified message types, you can see more in featuremap/msg.
-   If you don't have feature data, don't worry, we have sample data for your trial.*
-##### Featue Map Data -> [[download-92MB]](http://www.imorpheus.ai/download/dataForDemo/featureMapDemoData)
+1.*Make sure you have sucessed in building feature map.
+   If you haven't built it, don't worry, we have sample data for your trial.*
+##### Featue Map Result -> [[download-482KB]](http://www.imorpheus.ai/download/dataForDemo/featureMapResult)
 
-*Download the compressed data and put it into "tools/drawFeatureMap" and type commands to decompress:*
+*Download the compressed data and put it into "modules/data/feartureMap" and type commands to decompress:*
 ```
-$ tar -zvxf demo_data_of_feature_map.tar.gz
+$ tar -zvxf feature_map_result.tar.gz
 ```
 
-2.*Open the run.sh in directory "modules/featureMap" and set needed file directory correctly.*
+2.*Open the run.sh in directory "tools/drawFeatureMap" and set needed file directory correctly.*
 
-3.*In directory "modules/featureMap", run commands:*
+3.*In directory "tools/drawFeatureMap", run commands:*
 ```
 $ ./run.sh
 ```
 
-4.*Finally, you get an image of feature map in global position system coordinates.*
+4.*Finally, you can see the feature map in 2d image.*
+
 
 ### 3. Example
-  We show feature maps of demo data we have done. 
+  We show a result we have done. 
 
 #### 3.1 Featur map results
 ![image](https://raw.githubusercontent.com/iMorpheusAI/gpsCalibration/develop/demo/demo.gif)
