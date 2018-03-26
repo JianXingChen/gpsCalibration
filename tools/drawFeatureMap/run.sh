@@ -1,1 +1,1 @@
-./build/DrawFeatureMap_tool featureMap.txt img.bmp -100 -50 150 105 0.0
+./build/DrawFeatureMap_tool featureMap.txt img.bmp -30 10 50 45 6.0
