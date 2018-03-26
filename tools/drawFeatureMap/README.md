@@ -15,7 +15,7 @@ $ make
 ### 2. Run
 1.*Make sure you have sucessed in building feature map.
    If you haven't built it, don't worry, we have sample data for your trial.*
-##### Featue Map Result -> [[download-482KB]](http://www.imorpheus.ai/download/dataForDemo/featureMapResult)
+##### Featue Map Result -> [[download-76KB]](http://www.imorpheus.ai/download/dataForDemo/featureMapResult)
 
 *Download the compressed data and put it into "modules/data/feartureMap" and type commands to decompress:*
 ```
