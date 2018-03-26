@@ -9,7 +9,6 @@
 #include <string>
 #include <vector>
 
-#define HEADANGLEXY (149.0)
 #define MATHPI (3.141592653)
 
 using namespace std;
@@ -22,17 +21,7 @@ public:
     ~ENU2Local();
 
     //计算转换矩阵
-    static Eigen::Matrix4d ComputeTrMatrix(const char* fileLocalCoord, const char* fileGlobalCoord);
-
     static Eigen::Matrix4d ComputeTrMatrix(Mat localPoints, Mat globalPoints, Mat matW);
-
-    static Eigen::Matrix4d ComputeTrMatrix(Mat localPoints, Mat globalPoints);
-
-    //计算转换矩阵
-    static Eigen::Matrix3d ComputeTrMatrix(Eigen::Vector3d u, Eigen::Vector3d v);
-
-    //激光雷达x轴与车头夹角 149
-    static Eigen::Matrix3d GetLidarHeadRotate();
 
 private:
     //手动ICP带权重
