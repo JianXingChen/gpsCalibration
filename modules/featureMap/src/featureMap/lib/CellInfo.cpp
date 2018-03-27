@@ -1,3 +1,13 @@
+/**
+* Copyright (C) 2017-2018 Zhaorui Zhang (iMorpheusAI)
+* For more information see <https://github.com/iMorpheusAI/gpsCalibration>
+*
+* gpsCalibration is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*/
+
 #include <algorithm>
 #include <Eigen/Dense>
 #include "CellInfo.h"
@@ -6,8 +16,8 @@ using namespace std;
 using namespace cv;
 
 CellsENU::CellsENU():
-    m_CellSize(CELLSIZE),
-    m_Cells(new pcl::PointCloud<pcl::PointXYZ>())
+    m_Cells(new pcl::PointCloud<pcl::PointXYZ>()),
+    m_CellSize(CELLSIZE)
 {
 
 }
@@ -18,24 +28,27 @@ CellsENU::~CellsENU()
 }
 
 CellsENU::CellsENU(const pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud):
-    m_CellSize(CELLSIZE),
-    m_Cells(new pcl::PointCloud<pcl::PointXYZ>())
+    m_Cells(new pcl::PointCloud<pcl::PointXYZ>()),
+    m_CellSize(CELLSIZE)
 {
     CreateCells(inputCloud);
 }
 
 CellsENU::CellsENU(const pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud, const float cellSize):
-    m_CellSize(cellSize),
-    m_Cells(new pcl::PointCloud<pcl::PointXYZ>())
+    m_Cells(new pcl::PointCloud<pcl::PointXYZ>()),
+    m_CellSize(cellSize)
 {
     CreateCells(inputCloud);
 }
 
 CellsENU::CellsENU(const CellsENU& inputCellsENU):
-    m_CellSize(inputCellsENU.m_CellSize),
+    m_RepeatCellsNum(inputCellsENU.m_RepeatCellsNum),
     m_Cells(inputCellsENU.m_Cells),
-    m_CellsENUServerData(inputCellsENU.m_CellsENUServerData),
-    m_CellsKDTree(inputCellsENU.m_CellsKDTree)
+    m_CellsKDTree(inputCellsENU.m_CellsKDTree),
+    m_CellSize(inputCellsENU.m_CellSize),
+    m_CoordRef(inputCellsENU.m_CoordRef),
+    m_VerticalVec_Point(inputCellsENU.m_VerticalVec_Point),
+    m_CellsENUServerData(inputCellsENU.m_CellsENUServerData)
 {
 
 }
@@ -107,19 +120,6 @@ void CellsENU::InsertCellsENUServerData(CellsENUServerData data, pcl::PointXYZ c
 
 void CellsENU::CreateCells(const pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud)
 {
-//    //点云降采样
-//    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_downSampled(new pcl::PointCloud<pcl::PointXYZ>());
-//    vector<float> leafsize;
-//    float size = m_CellSize / 10;
-//    leafsize.push_back(size);
-//    leafsize.push_back(size);
-//    leafsize.push_back(size);
-//    cloud_downSampled = ResampleCloud(inputCloud, leafsize);
-
-    //点云中cells统计并排序
-//    for(size_t i = 0; i < cloud_downSampled->points.size(); i++)
-//    {
-//        pcl::PointXYZ p = cloud_downSampled->points[i];
     for(size_t i = 0; i < inputCloud->points.size(); i++)
     {
         pcl::PointXYZ p = inputCloud->points[i];
@@ -184,34 +184,10 @@ void CellsENU::CreateCells(const pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud)
     }
     dataTemp.ResetData();
 
-    //m_CellsKDTree = CreateKDTree(m_Cells);
     CreateKDTree();
 
     cout<<"There are "<<m_RepeatCellsNum.size()<<" points and "<<m_Cells->points.size()<<" cells created!"<<endl;
 
-    ///test
-//    cout<<m_CellsENUServerData.size()<<" "<<m_Cells->points.size()<<endl;
-//    for(size_t i = 0; i < m_CellsENUServerData.size(); i++)
-//    {
-//        cout<<"m_CellsENUServerData[i].m_N = "<<m_CellsENUServerData[i].m_N<<endl;
-//        cout<<"m_CellsENUServerData[i].m_NumInRepeatCells = "<<m_CellsENUServerData[i].m_NumInRepeatCells<<endl;
-//        cout<<"m_CellsENUServerData[i].m_Mean = "<<m_CellsENUServerData[i].m_Mean<<endl;
-//        cout<<"m_CellsENUServerData[i].m_Covariance = "<<m_CellsENUServerData[i].m_Covariance<<endl;
-//        cout<<"m_CellsENUServerData[i].m_Cell = "<<m_CellsENUServerData[i].m_Cell<<endl;
-//        cout<<"m_Cells[i] = "<<m_Cells->points[i]<<endl;
-
-//        Eigen::Vector3d cell(m_Cells->points[i].x, m_Cells->points[i].y, m_Cells->points[i].z);
-//        Eigen::Vector3d temp = m_CellsENUServerData[i].m_Mean - cell;
-//        if (temp(0)*temp(0) + temp(1)*temp(1) + temp(2)*temp(2) > m_CellSize * m_CellSize)
-//        {
-//            cout<<"m_CellsENUServerData[i].m_Mean = "<<m_CellsENUServerData[i].m_Mean<<endl;
-//            cout<<"Mean - Cell = "<<m_CellsENUServerData[i].m_Mean - cell<<endl;
-//        }
-//    }
-//    m_Cells->height = 1;
-//    m_Cells->width = m_Cells->points.size();
-//    pcl::io::savePCDFileBinary("./cloud-cells.pcd", *m_Cells);
-    ///end test
 }
 
 void CellsENU::CreateKDTree()
@@ -224,6 +200,16 @@ pcl::KdTreeFLANN<pcl::PointXYZ> CellsENU::GetCellsKDTree() const
     return m_CellsKDTree;
 }
 
+void CellsENU::AddVerticalVec_Point(pair<Eigen::Vector3d, pcl::PointXYZ> verticalVec_Point)
+{
+    m_VerticalVec_Point.push_back(verticalVec_Point);
+}
+
+vector<pair<Eigen::Vector3d, pcl::PointXYZ> > CellsENU::GetVerticalVec_Points() const
+{
+    return m_VerticalVec_Point;
+}
+
 void CellsENU::ResetData()
 {
     m_CellSize = CELLSIZE;
@@ -233,6 +219,171 @@ void CellsENU::ResetData()
     m_Cells->height = 1;
     m_Cells->points.clear();
     m_CellsENUServerData.clear();
+}
+
+void CellsENU::operator=(const CellsENU& cellsData)
+{
+    this->m_CellSize = cellsData.m_CellSize;
+    this->m_RepeatCellsNum = cellsData.m_RepeatCellsNum;
+    this->m_Cells = cellsData.m_Cells;
+    this->m_CellsENUServerData = cellsData.m_CellsENUServerData;
+    this->m_CellsKDTree = cellsData.m_CellsKDTree;
+    this->m_CoordRef = cellsData.m_CoordRef;
+    this->m_VerticalVec_Point = cellsData.m_VerticalVec_Point;
+}
+
+bool CellsENU::ReadCellsDataFromFile(string filePath, long &coordRef_x, long &coordRef_y)
+{
+    cout << endl << "Reading cell feature data from " << filePath << " ..." << endl;
+
+    ifstream ifile;
+    ifile.open(filePath.c_str());
+    if (!ifile.is_open())
+    {
+        cout<<"filePath in ReadCellFeatureData() can not open!"<<endl;
+        return false;
+    }
+
+    size_t num = 0;
+    bool dataStart = false;
+    while(!ifile.eof())
+    {
+        string s;
+        getline(ifile,s);
+        if(!s.empty())
+        {
+            stringstream ss;
+            ss << s;
+
+            if (s.compare("#data") == 0)
+                dataStart = true;
+            else if (num == 1)//base
+            {
+                float cellSize = 0;
+                ss >> cellSize;
+                ss >> coordRef_x;
+                ss >> coordRef_y;
+                m_CellSize = cellSize;
+                m_CoordRef.push_back(coordRef_x);
+                m_CoordRef.push_back(coordRef_y);
+            }
+            else if((num >= 3) && (!dataStart))//vertical vector
+            {
+                double vx = 0, vy = 0, vz = 0, px = 0, py = 0, pz = 0;
+                ss >> vx;
+                ss >> vy;
+                ss >> vz;
+                ss >> px;
+                ss >> py;
+                ss >> pz;
+
+                if (vx == 0 && vy == 0 && vz == 0)
+                {
+                    num++;
+                    continue;
+                }
+                pair<Eigen::Vector3d, pcl::PointXYZ> verticalVec_Point;
+                Eigen::Vector3d v(vx, vy, vz);
+                pcl::PointXYZ p(px, py, pz);
+                pair<Eigen::Vector3d, pcl::PointXYZ>(v, p);
+                AddVerticalVec_Point(verticalVec_Point);
+            }
+            else if((num >= 5) && dataStart)//data
+            {
+                double cx, cy, cz, N, mean0, mean1, mean2;
+                double cov00, cov01, cov02, cov11, cov12, cov22;
+
+                ss >> cx;
+                ss >> cy;
+                ss >> cz;
+
+                ss >> N;
+
+                ss >> mean0;
+                ss >> mean1;
+                ss >> mean2;
+
+                ss >> cov00;
+                ss >> cov01;
+                ss >> cov02;
+                ss >> cov11;
+                ss >> cov12;
+                ss >> cov22;
+
+                pcl::PointXYZ pCell(cx, cy, cz);
+                Eigen::Vector3d mean(mean0, mean1, mean2);
+                Eigen::Matrix3d cov;
+                cov << cov00, cov01, cov02,
+                       cov01, cov11, cov12,
+                       cov02, cov12, cov22;
+                CellsENUServerData data = CellsENUServerData(N, mean, cov, pCell);
+                AddCellData(pCell, data);
+            }
+
+            num++;
+        }
+    }
+
+    CreateKDTree();
+
+    cout<<"Reading successfully completed."<<endl;
+    return true;
+}
+
+//bool CellsENU::WriteCellsDataToFile(string filePath, long coordRef_x, long coordRef_y)
+bool CellsENU::WriteCellsDataToFile(string filePath)
+{
+    cout <<"Saving cell feature data to " << filePath << " ..." << endl;
+
+    ofstream of;
+    of.open(filePath.c_str());
+    if (!of.is_open())
+    {
+        cout<<"filePath in WriteCellFeatureData() can not open!"<<endl;
+        return false;
+    }
+
+    //#base
+    //of<<"#base"<<endl<<m_CellSize<<" "<<setprecision(12)<<coordRef_x<<" "<<coordRef_y<<endl;
+    of<<"#base-cell-size"<<endl<<m_CellSize<<endl;
+
+    //#vertical vector
+    of<<"#ground-normal-vector"<<endl;
+    if (m_VerticalVec_Point.size() > 0)
+    {
+        for(size_t k = 0; k < m_VerticalVec_Point.size(); k++)
+        {
+            of<<setprecision(9)
+              <<m_VerticalVec_Point[k].first(0)<<" "<<m_VerticalVec_Point[k].first(1)<<" "<<m_VerticalVec_Point[k].first(2)<<" "
+              <<m_VerticalVec_Point[k].second.x<<" "<<m_VerticalVec_Point[k].second.y<<" "<<m_VerticalVec_Point[k].second.z<<endl;
+        }
+    }
+    else
+        of<<"0 0 0 0 0 0"<<endl;
+    //#data
+    of<<"#cell-data"<<endl;
+    std::vector<CellsENUServerData>& data = m_CellsENUServerData;
+    if (data.size() > 0)
+    {
+        for(size_t i = 0; i < data.size(); i++)
+        {
+            of<<data[i].m_Cell.x<<" "<<data[i].m_Cell.y<<" "<<data[i].m_Cell.z<<" ";
+            of<<setprecision(9)
+              <<data[i].m_N<<" "<<data[i].m_Mean(0)<<" "<<data[i].m_Mean(1)<<" "<<data[i].m_Mean(2)<<" "
+              <<data[i].m_Covariance(0,0)<<" "<<data[i].m_Covariance(0,1)<<" "<<data[i].m_Covariance(0,2)<<" "
+              <<data[i].m_Covariance(1,1)<<" "<<data[i].m_Covariance(1,2)<<" "<<data[i].m_Covariance(2,2)<<endl;
+        }
+    }
+    else
+    {
+        cout<<"CellsENU has no data to write!"<<endl;
+        return false;
+    }
+
+    of.close();
+    cout << "Cell feature data saved!" << endl;
+
+    return true;
 }
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr CellsENU::ResampleCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr input,

@@ -1,3 +1,13 @@
+/**
+* Copyright (C) 2017-2018 Zhaorui Zhang (iMorpheusAI)
+* For more information see <https://github.com/iMorpheusAI/gpsCalibration>
+*
+* gpsCalibration is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*/
+
 #ifndef FEATUREMAPFUSION_H
 #define FEATUREMAPFUSION_H
 
@@ -22,11 +32,15 @@
 #include <string>
 #include <vector>
 
-#include "LineInfo.h"
 #include "CellInfo.h"
+
+//#define HEADANGLEXY (0)
+//#define MAXITERTIMES (100) //修正Roll时最大迭代次数
+//#define ITERSTEP (0.01) //修正Roll时迭代步长
 
 using namespace std;
 using namespace cv;
+
 
 class FeatureMapFusion
 {
@@ -34,26 +48,13 @@ public:
     FeatureMapFusion();
     ~FeatureMapFusion();
 
-    //Feature Map Fusion
+    //Feature map fusion
     static bool FusionCellsWithCells(const CellsENU& CellsENUSrc1, const CellsENU& CellsENUSrc2,
                                      CellsENU& targetCellsENU);
 
-    //计算转换矩阵
-    static Eigen::Matrix3d ComputeTrMatrix(const char* fileLocalCoord, const char* fileGlobalCoord);
-    static Eigen::Matrix3d ComputeTrMatrix(const Eigen::Vector3d u, const Eigen::Vector3d v);
-    static Eigen::Matrix3d ComputeTrMatrix(const Eigen::Vector3f u, const Eigen::Vector3f v);
-
-    //选择合适的直线段
-    //static SimpleLine SelectProperLine(const SimpleLine inputLine,
-    //const vector<SimpleLine> lines);
-
     //创建Kd-tree用来查找点对应的cell
     static pcl::KdTreeFLANN<pcl::PointXYZ> CreateKDTree(const pcl::PointCloud<pcl::PointXYZ>::Ptr inputCells);
-
-private:
-    //手动ICP带权重
-    static Eigen::Matrix4d ICPWithWeight3D(const cv::Mat &ENUPositions, const cv::Mat &LOAMPositions,
-                                           const cv::Mat &weightMat);
 };
+
 
 #endif //FEATUREMAPFUSION_H

@@ -1,0 +1,2 @@
+geometry_msgs/Vector3 DirectionVector
+geometry_msgs/Point CentorPoint

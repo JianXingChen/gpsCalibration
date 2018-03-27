@@ -1,3 +1,13 @@
+/**
+* Copyright (C) 2017-2018 Zhaorui Zhang (iMorpheusAI)
+* For more information see <https://github.com/iMorpheusAI/gpsCalibration>
+*
+* gpsCalibration is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*/
+
 #ifndef CELLINFO_H
 #define CELLINFO_H
 
@@ -59,6 +69,15 @@ struct CellsENUServerData
         m_Confidence = 0;
         m_Cell.x = 0; m_Cell.y = 0; m_Cell.z = 0;
     }
+    void operator=(const CellsENUServerData& data)
+    {
+        this->m_N = data.m_N;
+        this->m_Mean = data.m_Mean;
+        this->m_Covariance = data.m_Covariance;
+        this->m_NumInRepeatCells = data.m_NumInRepeatCells;
+        this->m_Confidence = data.m_Confidence;
+        this->m_Cell = data.m_Cell;
+    }
 
     size_t m_N;
     Eigen::Vector3d m_Mean;
@@ -101,7 +120,7 @@ public:
 
     void SetCellSize(float cellSize);
 
-    void AddCellData(pcl::PointXYZ cell, CellsENUServerData data);
+    void AddCellData(pcl::PointXYZ cell, CellsENUServerData data);//不更改KDTree
 
     void UpdateCellData(size_t num, CellsENUServerData data);
 
@@ -116,7 +135,24 @@ public:
 
     pcl::KdTreeFLANN<pcl::PointXYZ> GetCellsKDTree() const;
 
+    void AddVerticalVec_Point(std::pair<Eigen::Vector3d, pcl::PointXYZ> verticalVec_Point);
+
+    std::vector<std::pair<Eigen::Vector3d, pcl::PointXYZ> > GetVerticalVec_Points() const;
+
     void ResetData();
+
+    void operator=(const CellsENU& cellsData);
+
+    //File format:
+    //#base
+    //cellSize Xr Yr
+    //#vertical vector
+    //Xc Yc Zc Xv Yv Zv
+    //#data
+    //...
+    bool ReadCellsDataFromFile(std::string path, long &coordRef_x, long &coordRef_y);
+
+    bool WriteCellsDataToFile(std::string filePath);
 
 private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr ResampleCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr input,
@@ -127,12 +163,18 @@ private:
     //结构体排序的sort算法
     static bool SortComp(const CellsNum &a, const CellsNum &b);
 
-    float m_CellSize;
     std::vector<CellsNum> m_RepeatCellsNum;
-
     pcl::PointCloud<pcl::PointXYZ>::Ptr m_Cells;
-    std::vector<CellsENUServerData> m_CellsENUServerData;
     pcl::KdTreeFLANN<pcl::PointXYZ> m_CellsKDTree;
+
+    //base
+    float m_CellSize;
+    std::vector<size_t> m_CoordRef;
+    //vertical vector
+    std::vector<std::pair<Eigen::Vector3d, pcl::PointXYZ>> m_VerticalVec_Point;
+    //data
+    std::vector<CellsENUServerData> m_CellsENUServerData;
+
 };
 
 #endif //CELLINFO_H

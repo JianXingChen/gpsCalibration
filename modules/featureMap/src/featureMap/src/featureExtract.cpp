@@ -27,11 +27,13 @@
 #include "FeatureMapFusion.h"
 #include "featureMap/IMControl.h"
 #include "featureMap/SVDPoints.h"
+#include "featureMap/IMFeatureVector.h"
 
 const float HEIGHT = 1.86;
 const float RATIO = 500.0;
 const float VERTICALITY = 0.008;
 const float ZERO = 0.000001;
+const float CSIZE = 1.0;
 
 int counter = 0;
 int lineNum = 0;
@@ -77,6 +79,9 @@ cv::Mat temp(1, 3, CV_32F, cv::Scalar::all(0));
 pcl::PointCloud<pcl::PointXYZ>::Ptr laserCloudFullRes(new pcl::PointCloud<pcl::PointXYZ>());
 pcl::PointCloud<pcl::PointXYZ>::Ptr pointCloudRotated(new pcl::PointCloud<pcl::PointXYZ>());
 
+vector<pair<Eigen::Vector3d, pcl::PointXYZ>> vectorTotal;
+CellsENU cloudCellTotal;
+
 void odometryHandler(const nav_msgs::Odometry::ConstPtr& laserOdometry) 
 {
     if ((fabs(laserOdometry->pose.pose.position.x) < ZERO) && (fabs(laserOdometry->pose.pose.position.y) < ZERO) && (fabs(laserOdometry->pose.pose.position.z) < ZERO))
@@ -100,6 +105,19 @@ void controlHandler(const featureMap::IMControl::ConstPtr& msg)
     {
         systemInited = true;
     }
+}
+
+void vectorHandler(const featureMap::IMFeatureVector::ConstPtr& featureVector) 
+{
+    pair<Eigen::Vector3d, pcl::PointXYZ> vectorTemp;
+    vectorTemp.first(0)= featureVector->DirectionVector.x;
+    vectorTemp.first(1)= featureVector->DirectionVector.y;
+    vectorTemp.first(2)= featureVector->DirectionVector.z;
+    vectorTemp.second.x= featureVector->CentorPoint.x;
+    vectorTemp.second.y= featureVector->CentorPoint.y;
+    vectorTemp.second.z= featureVector->CentorPoint.z;
+    vectorTotal.push_back(vectorTemp);
+    std::cout<< "test x is: "<< vectorTemp.second.x << std::endl;
 }
 
 void svdHandler(const featureMap::SVDPoints::ConstPtr& svdpoints) 
@@ -139,114 +157,6 @@ void pointcloudHandler(const sensor_msgs::PointCloud2::ConstPtr& pointcloudMsg)
     }
 }
 
-bool WriteCellFeatureData(const CellsENU &inputCellInfo, const char* path)
-{
-    cout << endl << "Saving cell feature data to " << path << " ..." << endl;
-
-    ofstream of; 
-    of.open(path);//, ios::binary);
-    if (!of.is_open())
-    {   
-        cout<<"filePath in WriteCellFeatureData() can not open!"<<endl;
-        return false;
-    }   
-
-    of<< inputCellInfo.GetCellSize()<< endl;
-
-    vector<CellsENUServerData> data = inputCellInfo.GetCellsData();
-    if (data.size() > 0)
-    {   
-        for(size_t i = 0; i < data.size(); i++)
-        {
-            of<<data[i].m_Cell.x<<" "<<data[i].m_Cell.y<<" "<<data[i].m_Cell.z<<" ";
-            of<<setprecision(9)
-              <<data[i].m_N<<" "<<data[i].m_Mean(0)<<" "<<data[i].m_Mean(1)<<" "<<data[i].m_Mean(2)<<" "
-              <<data[i].m_Covariance(0,0)<<" "<<data[i].m_Covariance(0,1)<<" "<<data[i].m_Covariance(0,2)<<" "
-              <<data[i].m_Covariance(1,1)<<" "<<data[i].m_Covariance(1,2)<<" "<<data[i].m_Covariance(2,2)<<endl;
-        }
-    }   
-    else
-    {   
-        cout<<"CellsENU has no data to write!"<<endl;
-        return false;
-    }   
-
-    of.close();
-    cout << "Cell feature data saved!" << endl;
-
-    return true;
-}
-
-bool ReadCellFeatureData(string path, CellsENU &cellInfo)
-{
-    cout << endl << "Reading cell feature data from " << path << " ..." << endl;
-
-    ifstream ifile;
-    ifile.open(path.c_str());
-    if (!ifile.is_open())
-    {
-        cout<<"filePath in ReadCellFeatureData() can not open!"<<endl;
-        return false;
-    }
-
-    int num = 0;
-    while(!ifile.eof())
-    {
-        string s;
-        getline(ifile,s);
-        if(!s.empty())
-        {
-            stringstream ss;
-            ss << s;
-
-            if (num == 0)
-            {
-                float cellSize = 0;
-                ss >> cellSize;
-                cellInfo.SetCellSize(cellSize);
-            }
-            else
-            {
-                double cx, cy, cz, N, mean0, mean1, mean2;
-                double cov00, cov01, cov02, cov11, cov12, cov22;
-
-                ss >> cx;
-                ss >> cy;
-                ss >> cz;
-
-                ss >> N;
-
-                ss >> mean0;
-                ss >> mean1;
-                ss >> mean2;
-
-                ss >> cov00;
-                ss >> cov01;
-                ss >> cov02;
-                ss >> cov11;
-                ss >> cov12;
-                ss >> cov22;
-
-                pcl::PointXYZ pCell(cx, cy, cz);
-                Eigen::Vector3d mean(mean0, mean1, mean2);
-                Eigen::Matrix3d cov;
-                cov << cov00, cov01, cov02,
-                       cov01, cov11, cov12,
-                       cov02, cov12, cov22;
-                CellsENUServerData data = CellsENUServerData(N, mean, cov, pCell);
-                cellInfo.AddCellData(pCell, data);
-            }
-
-            num++;
-        }
-    }
-
-    cellInfo.CreateKDTree();
-
-    return true;
-}
- 
-
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "featureExtract");
@@ -255,6 +165,7 @@ int main(int argc, char** argv)
     ros::Subscriber odometrySub = nh.subscribe<nav_msgs::Odometry> ("/integrated_to_init", 5, odometryHandler);
     ros::Subscriber controlSub = nh.subscribe<featureMap::IMControl>("/control_command", 2, controlHandler);
     ros::Subscriber svdSub = nh.subscribe<featureMap::SVDPoints>("/svdpoints", 2, svdHandler);
+    ros::Subscriber featureVector = nh.subscribe<featureMap::IMFeatureVector>("/feature_vector", 2, vectorHandler);
     ros::Subscriber pointcloudSub = nh.subscribe<sensor_msgs::PointCloud2>
                                         ("/velodyne_cloud_registered", 2, pointcloudHandler);
 
@@ -266,7 +177,7 @@ int main(int argc, char** argv)
         if (systemInited)
         {
             systemInited = false;
-            //
+
             for(std::map<int, std::map<bool, std::vector<rtkType> > >::iterator it = rtkTracks.begin(); it != rtkTracks.end();)
             {
                 std::cout << "The LOAM Odometry Linenum Is: " << it->first << std::endl;
@@ -549,12 +460,18 @@ int main(int argc, char** argv)
                     }
                     
                     //output feature map
-                    float cellSize = 1.0f;
-                    CellsENU cloudCells = CellsENU(pointCloudRotated, cellSize);
-                    char fileFeatures[128]= {0};
-                    sprintf(fileFeatures, "./data/featureDataLine%d.txt", nNum);
-                    WriteCellFeatureData(cloudCells, fileFeatures);
-
+                    if(nNum==1)
+                    {
+                        cloudCellTotal = CellsENU(pointCloudRotated, CSIZE);
+                    }
+                    else
+                    {
+                        CellsENU cloudCellInput = CellsENU(pointCloudRotated, CSIZE);
+                        CellsENU cloudCellTarget;
+                        FeatureMapFusion::FusionCellsWithCells(cloudCellInput, cloudCellTotal, cloudCellTarget);
+                        cloudCellTotal= cloudCellTarget;
+                    }
+                    
                     //erase
                     rtkTracks.erase(it);
                     it = rtkTracks.begin(); 
@@ -563,14 +480,11 @@ int main(int argc, char** argv)
                 ++it;
             }
             //TODO
-            CellsENU cloudCellsTotal;
-            CellsENU read1;
-            CellsENU read2;
-            double x0, y0; 
-            ReadCellFeatureData("./data/featureDataLine1.txt", read1);
-            ReadCellFeatureData("./data/featureDataLine2.txt", read2);
-            FeatureMapFusion::FusionCellsWithCells(read1, read2, cloudCellsTotal);
-            WriteCellFeatureData(cloudCellsTotal, outputFilename.c_str());
+            for(int iv= 0; iv< vectorTotal.size(); iv++ )
+            {
+                cloudCellTotal.AddVerticalVec_Point(vectorTotal[iv]);
+            }
+            cloudCellTotal.WriteCellsDataToFile(outputFilename.c_str());
         }
 
         status = ros::ok();
