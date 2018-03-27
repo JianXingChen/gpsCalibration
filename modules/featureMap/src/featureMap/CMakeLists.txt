@@ -61,6 +61,7 @@ find_package(OpenCV REQUIRED)
    ChipLineInformation.msg
    IMControl.msg
    SVDPoints.msg
+   IMFeatureVector.msg
  )
 
 ## Generate added messages and services with any dependencies listed here
@@ -95,7 +96,6 @@ include_directories(
 add_library(${PROJECT_NAME}
    lib/ENU2Local.cpp
    lib/CellInfo.cpp
-   lib/LineInfo.cpp
    lib/FeatureMapFusion.cpp
  )
 target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES} ${OpenCV_LIBS})

@@ -7,7 +7,10 @@
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
-
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+ 
 #include <iostream>
 #include <opencv/cv.h>
 #include <fstream>
@@ -18,6 +21,7 @@
 #include "featureMap/ChipLineInformation.h"
 #include "featureMap/IMControl.h"
 #include "featureMap/SVDPoints.h"
+#include "featureMap/IMFeatureVector.h"
 
 const float MAXDISTANCE = 0.25;
 
@@ -60,6 +64,7 @@ int main(int argc, char** argv)
                                          ("/velodyne_points", 2);
     ros::Publisher pubControl = nh.advertise<featureMap::IMControl>("/control_command",2);
     ros::Publisher pubSvd = nh.advertise<featureMap::SVDPoints>("/svdpoints",2);
+    ros::Publisher pubFeatureVector = nh.advertise<featureMap::IMFeatureVector>("/feature_vector",2);
 
     //1.input line segment
     rosbag::Bag readbag;
@@ -74,6 +79,8 @@ int main(int argc, char** argv)
     rosbag::View view(readbag, rosbag::TopicQuery(topics));
 
     pointType linepoint, direction, centroid;
+    featureMap::IMFeatureVector vectorPub;
+
     for(rosbag::View::iterator it =  view.begin(); it != view.end(); ++it)
     {
         gnss_pointcloud2 = it->instantiate<featureMap::IMGNSS_Pointclouds2>();
@@ -240,7 +247,13 @@ int main(int argc, char** argv)
                         lvpoint.y = line_centroid[1].y - v[1];
                         lvpoint.z = line_centroid[1].z - v[2];
                         lvpoints.push_back(lvpoint);
-    
+
+                        vectorPub.DirectionVector.x= v[0];
+                        vectorPub.DirectionVector.y= v[1];
+                        vectorPub.DirectionVector.z= v[2];
+                        vectorPub.CentorPoint.x= (line_centroid[0].x+ line_centroid[1].x)/ 2.0;
+                        vectorPub.CentorPoint.y= (line_centroid[0].y+ line_centroid[1].y)/ 2.0;
+                        vectorPub.CentorPoint.z= (line_centroid[0].z+ line_centroid[1].z)/ 2.0;
 
                         //clear
                         T.clear();
@@ -259,6 +272,9 @@ int main(int argc, char** argv)
             rate.sleep();
         }
     }  
+
+    //publish feature vector
+    pubFeatureVector.publish(vectorPub);
 
     if (!svdpoints.points.empty())
     {
@@ -284,7 +300,6 @@ int main(int argc, char** argv)
         pubSvd.publish(pubvector[i]);
         rate.sleep();
     }
-
 
     //publish loam init msg
     featureMap::IMControl controlMsg;
