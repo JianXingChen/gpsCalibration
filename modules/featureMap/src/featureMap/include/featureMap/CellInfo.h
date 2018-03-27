@@ -150,7 +150,7 @@ public:
     //Xc Yc Zc Xv Yv Zv
     //#data
     //...
-    bool ReadCellsDataFromFile(std::string path, long &coordRef_x, long &coordRef_y);
+    bool ReadCellsDataFromFile(std::string path);
 
     bool WriteCellsDataToFile(std::string filePath);
 

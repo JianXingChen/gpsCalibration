@@ -232,7 +232,7 @@ void CellsENU::operator=(const CellsENU& cellsData)
     this->m_VerticalVec_Point = cellsData.m_VerticalVec_Point;
 }
 
-bool CellsENU::ReadCellsDataFromFile(string filePath, long &coordRef_x, long &coordRef_y)
+bool CellsENU::ReadCellsDataFromFile(string filePath)
 {
     cout << endl << "Reading cell feature data from " << filePath << " ..." << endl;
 
@@ -255,17 +255,13 @@ bool CellsENU::ReadCellsDataFromFile(string filePath, long &coordRef_x, long &co
             stringstream ss;
             ss << s;
 
-            if (s.compare("#data") == 0)
+            if (s.compare("#cell-data") == 0)
                 dataStart = true;
             else if (num == 1)//base
             {
                 float cellSize = 0;
                 ss >> cellSize;
-                ss >> coordRef_x;
-                ss >> coordRef_y;
                 m_CellSize = cellSize;
-                m_CoordRef.push_back(coordRef_x);
-                m_CoordRef.push_back(coordRef_y);
             }
             else if((num >= 3) && (!dataStart))//vertical vector
             {

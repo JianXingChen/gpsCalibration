@@ -194,6 +194,7 @@ bool ReadCellFeatureData(string path, CellsENU &cellInfo)
     }
 
     int num = 0;
+    bool dataStart= false;
     while(!ifile.eof())
     {
         string s;
@@ -203,13 +204,15 @@ bool ReadCellFeatureData(string path, CellsENU &cellInfo)
             stringstream ss;
             ss << s;
 
-            if (num == 0)
+            if (s.compare("#cell-data") == 0)
+                dataStart = true;
+            else if((num== 1) && dataStart)
             {
                 float cellSize = 0;
                 ss >> cellSize;
                 cellInfo.SetCellSize(cellSize);
             }
-            else
+            else if((num>= 5) && dataStart)
             {
                 double cx, cy, cz, N, mean0, mean1, mean2;
                 double cov00, cov01, cov02, cov11, cov12, cov22;
