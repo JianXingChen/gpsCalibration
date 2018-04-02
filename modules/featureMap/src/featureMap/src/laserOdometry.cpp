@@ -378,7 +378,6 @@ void imuTransHandler(const sensor_msgs::PointCloud2ConstPtr& imuTrans2)
 
 void controlHandler(const featureMap::IMControl::ConstPtr& msg)
 {
-    ROS_INFO("%s","get control message");
     systemInited = msg->systemInited;
     //publish control msg
     /*featureMap::IMControl controlMsg;

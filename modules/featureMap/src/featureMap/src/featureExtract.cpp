@@ -87,7 +87,7 @@ void odometryHandler(const nav_msgs::Odometry::ConstPtr& laserOdometry)
     if ((fabs(laserOdometry->pose.pose.position.x) < ZERO) && (fabs(laserOdometry->pose.pose.position.y) < ZERO) && (fabs(laserOdometry->pose.pose.position.z) < ZERO))
     {
         lineNum++;
-        std::cout << "LineNum: " << lineNum << std::endl;
+        std::cout << "LOAM tracks lineNum: " << lineNum << std::endl;
 
         vecLoamTracks.clear();
         loamTracks[lineNum] = vecLoamTracks;

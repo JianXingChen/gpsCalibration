@@ -96,7 +96,7 @@ int main(int argc, char** argv)
                 {
                     lineNum++;
                     lineNo = gnss_pointcloud2->LineInformation.lineNo;
-                    std::cout << "curve lineNo: " << lineNo << " , lineNum: " << lineNum << std::endl;
+                    std::cout << "curve lineNum: " << lineNum << std::endl;
                     //publish loam init msg
                     featureMap::IMControl controlMsg;
                     controlMsg.systemInited = false;
@@ -123,6 +123,7 @@ int main(int argc, char** argv)
                 {
                     lineNum++;
                     lineNo = gnss_pointcloud2->LineInformation.lineNo;
+                    std::cout << "straight line lineNum: " << lineNum << std::endl;
 
                     //publish loam init msg
                     featureMap::IMControl controlMsg;
@@ -193,7 +194,11 @@ int main(int argc, char** argv)
                         if (distance > MAXDISTANCE)
                         {
                             std::cout << "************The two lines are not on the same plane!!!************" << std::endl;
-                            return 0;
+                            //clear
+                            T.clear();
+                            Direction.clear();
+                            line_centroid.clear();
+                            continue;
                         }
 
                         u[0] = Direction[0].x;
