@@ -54,8 +54,6 @@
 
 using namespace std;
 
-bool systemInited = false;
-
 float transformSum[6] = {0};
 float transformIncre[6] = {0};
 float transformMapped[6] = {0};
@@ -67,19 +65,6 @@ tf::TransformBroadcaster *tfBroadcaster2Pointer = NULL;
 nav_msgs::Odometry laserOdometry2;
 tf::StampedTransform laserOdometryTrans2;
 
-int nFrameCount;
-
-struct DataType
-{
-    double localX;
-    double localY;
-    double localZ;
-    double timestamp;
-};
-
-
-static DataType predata;
-static DataType tmpdata;
 
 //关联map之后的旋转平移矩阵transformMapped
 void transformAssociateToMap()
@@ -169,42 +154,12 @@ void transformAssociateToMap()
                      - (-sin(transformMapped[1]) * x2 + cos(transformMapped[1]) * z2);
 }
 
-void SaveTrailWithTimeTotxt()
-{
-    if(predata.timestamp == 0)
-    {
-        predata.localX = laserOdometry2.pose.pose.position.z;
-        predata.localY = laserOdometry2.pose.pose.position.x;
-        predata.localZ = laserOdometry2.pose.pose.position.y;
-        predata.timestamp = (double)laserOdometry2.header.stamp.toSec();
-        tmpdata = predata;
-    }
-    else
-    {
-        double deltaX = laserOdometry2.pose.pose.position.z - predata.localX;
-        double deltaY = laserOdometry2.pose.pose.position.x - predata.localY;
-        double deltaZ = laserOdometry2.pose.pose.position.y - predata.localZ;
-        double deltaX1 = deltaX * sqrt(pow(deltaX,2) + pow(deltaY,2) + pow(deltaZ,2)) / sqrt(pow(deltaX,2) + pow(deltaY,2));
-        double deltaY1 = deltaY * sqrt(pow(deltaX,2) + pow(deltaY,2) + pow(deltaZ,2)) / sqrt(pow(deltaX,2) + pow(deltaY,2));
-
-        tmpdata.localX += deltaX1;
-        tmpdata.localY += deltaY1;
-        tmpdata.localZ = laserOdometry2.pose.pose.position.y;
-        tmpdata.timestamp = (double)laserOdometry2.header.stamp.toSec();
-
-        predata.localX = laserOdometry2.pose.pose.position.z;
-        predata.localY = laserOdometry2.pose.pose.position.x;
-        predata.localZ = laserOdometry2.pose.pose.position.y;
-        predata.timestamp = (double)laserOdometry2.header.stamp.toSec();
-    }
-}
 
 //接收laserOdometry的信息
 void laserOdometryHandler(const nav_msgs::Odometry::ConstPtr& laserOdometry)
 {
   if ((fabs(laserOdometry->pose.pose.position.x) < 0.000001) && (fabs(laserOdometry->pose.pose.position.y) < 0.000001) && (fabs(laserOdometry->pose.pose.position.z) < 0.000001))
   {
-    predata.timestamp = 0;
     for (int i =0; i < 6; i++)
     {
         transformSum[i] = 0;
@@ -213,7 +168,6 @@ void laserOdometryHandler(const nav_msgs::Odometry::ConstPtr& laserOdometry)
         transformBefMapped[i] = 0;
         transformAftMapped[i] = 0;
     }
-    nFrameCount++;
   }
 
   double roll, pitch, yaw;
@@ -243,9 +197,6 @@ void laserOdometryHandler(const nav_msgs::Odometry::ConstPtr& laserOdometry)
   laserOdometry2.pose.pose.position.y = transformMapped[4];
   laserOdometry2.pose.pose.position.z = transformMapped[5];
   pubLaserOdometry2Pointer->publish(laserOdometry2);
-
-
-  SaveTrailWithTimeTotxt();
 
   //发送旋转平移量
   laserOdometryTrans2.stamp_ = laserOdometry->header.stamp;

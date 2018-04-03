@@ -459,6 +459,7 @@ int main(int argc, char** argv)
                     //std::cout << std::setprecision(12) << R << std::endl;
     
                     size_t pointCloudSize = pointCloudOrigin->points.size();
+                    pointCloudRotated->points.clear();
                     for(size_t i = 0; i < pointCloudSize; i++)
                     {
                         p0 << pointCloudOrigin->points[i].x, pointCloudOrigin->points[i].y, pointCloudOrigin->points[i].z, 1;
@@ -468,6 +469,13 @@ int main(int argc, char** argv)
                         point.z = p1(2);
                         pointCloudRotated->points.push_back(point);
                     }
+
+
+                    char file_name[128] ={0};
+                    pointCloudRotated->width = pointCloudRotated->points.size();
+                    pointCloudRotated->height = 1;
+                    sprintf(file_name, "./data/map_rotated%d.pcd", nNum);
+                    pcl::io::savePCDFileASCII (file_name, *pointCloudRotated);
                     
                     //output feature map
                     if(nNum==1)

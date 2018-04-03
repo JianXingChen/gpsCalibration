@@ -912,12 +912,6 @@ int main(int argc, char** argv)
         }
       }
 
-      /*
-      ROS_INFO("tx2: %f", transform[3]);
-      ROS_INFO("ty2: %f", transform[4]);
-      ROS_INFO("tz2: %f", transform[5]);
-      ROS_INFO("********************");
-      */
       float rx, ry, rz, tx, ty, tz;
       //求相对于原点的旋转量,1.05倍修正?
       AccumulateRotation(transformSum[0], transformSum[1], transformSum[2], 

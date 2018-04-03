@@ -289,12 +289,6 @@ void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg)
     point.y = laserCloudIn.points[i].z;
     point.z = laserCloudIn.points[i].x;
 
-    /*if ((point.x * point.x + point.z * point.z) < 500.0)
-    {
-        count--;
-        continue;
-    }*/
-
     //计算点的仰角(单位：度),根据仰角排列激光线号，velodyne每两个scan之间间隔2度
     float angle = atan(point.y / sqrt(point.x * point.x + point.z * point.z)) * 180 / M_PI;
     int scanID;
