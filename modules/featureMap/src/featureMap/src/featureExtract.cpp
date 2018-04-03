@@ -32,8 +32,10 @@
 const float HEIGHT = 1.86;
 const float RATIO = 500.0;
 const float VERTICALITY = 0.008;
+const float DEVIATION = 0.8;
 const float ZERO = 0.000001;
 const float CSIZE = 1.0;
+const int MINSIZE = 200000;
 
 int counter = 0;
 int lineNum = 0;
@@ -320,12 +322,12 @@ int main(int argc, char** argv)
                                 }
                             }
                             size = pointCloud.points.size();
-                            if(0 == size)
+                            if(size < MINSIZE)
                             {
-                                std::cout << "Point cloud size is zero now!" << std::endl;
+                                std::cout << "Point cloud size is too little!" << std::endl;
                                 break;
                             }
-                            //std::cout << "Point cloud size:" << size << std::endl;
+                            std::cout << "Point cloud size:" << size << std::endl;
                             cv::Mat P(3, size, CV_32F, cv::Scalar::all(0));
                             cv::Mat Pt(size, 3, CV_32F, cv::Scalar::all(0));
     
@@ -346,7 +348,7 @@ int main(int argc, char** argv)
                             //normalize:h×(v3×h)
                             temp = v3.cross(h);
                             g = h.cross(temp);
-                            //std::cout << "g(n):" << g.at<float>(0, 0) << " " << g.at<float>(0, 1) << " " << g.at<float>(0, 2) << std::endl;
+                            std::cout << "g(n):" << g.at<float>(0, 0) << " " << g.at<float>(0, 1) << " " << g.at<float>(0, 2) << std::endl;
 
                             float dot_product = fabs(v3.at<float>(0, 0) * h.at<float>(0, 0) + v3.at<float>(0, 1) * h.at<float>(0, 1) + v3.at<float>(0, 2) * h.at<float>(0, 2));
                             //std::cout << "dot product(v3 * h):" << dot_product << std::endl;
@@ -369,10 +371,18 @@ int main(int argc, char** argv)
                             pointCloudIn.points = pointCloud.points;
                         }
 
+                        if (g.at<float>(0, 2) < DEVIATION)//if the ground normal vector has a big deviation from the initial value
+                        {
+                            std::cout << "The result of g has a large deviation from the initial value: " << g.at<float>(0, 0) << " " << g.at<float>(0, 1) << " " << g.at<float>(0, 2) << std::endl;
+                            g.at<float>(0, 0) = 0;
+                            g.at<float>(0, 1) = 0;
+                            g.at<float>(0, 2) = 1;
+                        }
+
                         l = g.cross(h);
 
                         std::cout << "The local slam odometry heading direction is: " << h.at<float>(0, 0) << " "  << h.at<float>(0, 1) << " " << h.at<float>(0, 2) << std::endl;
-                        std::cout << "The ground normal vector of PCD is: " << g.at<float>(0, 0) << " " << g.at<float>(0, 1) << " " << g.at<float>(0, 2) << std::endl;
+                        std::cout << "The ground normal vector used is: " << g.at<float>(0, 0) << " " << g.at<float>(0, 1) << " " << g.at<float>(0, 2) << std::endl;
                     
                         cv::Mat matGlobal;
                         cv::Mat matLocal;
