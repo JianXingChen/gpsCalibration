@@ -203,9 +203,12 @@ int main(int argc, char** argv)
                     pointCloudOrigin->points = it_pointCloud->second.points;
 
                     //TODO:
+                    int loamSize = loam_it->second.size();
+                    std::cout << "+++++++++++++++ loamSize:" << loamSize << std::endl;
+                    int rtkSize = it->second.begin()->second.size();
+                    std::cout << "++++++++++++++++ rtkSize:" << rtkSize << std::endl;
                     if (it->second.begin()->first)
                     {
-                        size_t loamSize = loamTracks[nNum].size();
                         pcl::PointXYZ line_centroid;
                         line_centroid.x = 0;
                         line_centroid.y = 0;
@@ -404,8 +407,6 @@ int main(int argc, char** argv)
                         mat = (cv::Mat_<double>(1,3)<< (double)(line_centroid.x - g.at<float>(0, 0)), (double)(line_centroid.y - g.at<float>(0, 1)), (double)(line_centroid.z - g.at<float>(0, 2)));
                         matLocal.push_back(mat);
 
-                        int rtkSize = it->second.begin()->second.size();
-                        //std::cout << "++++++++++++++++ rtkSize:" << rtkSize << std::endl;
                         for(int i = rtkSize - loamSize - 4; i < rtkSize; i++)
                         {
                             mat = (cv::Mat_<double>(1,3)<< it->second.begin()->second[i].x, it->second.begin()->second[i].y, it->second.begin()->second[i].z);
@@ -433,14 +434,12 @@ int main(int argc, char** argv)
                         cv::Mat matLocal;
                         cv::Mat mat;
                         double weightSum = 0.0;
-                        int loamSize = loam_it->second.size();
                         for(int i = 0; i < loamSize; i++)
                         {
                             mat = (cv::Mat_<double>(1,3)<< loam_it->second[i].x, loam_it->second[i].y, loam_it->second[i].z);
                             matLocal.push_back(mat);
                         }
 
-                        int rtkSize = it->second.begin()->second.size();
                         for(int i = rtkSize - loamSize; i < rtkSize; i++)
                         {
                             mat = (cv::Mat_<double>(1,3)<< it->second.begin()->second[i].x, it->second.begin()->second[i].y, it->second.begin()->second[i].z);
@@ -459,7 +458,7 @@ int main(int argc, char** argv)
                     //std::cout << std::setprecision(12) << R << std::endl;
     
                     size_t pointCloudSize = pointCloudOrigin->points.size();
-                    pointCloudRotated->points.clear();
+                    pointCloudRotated->clear();
                     for(size_t i = 0; i < pointCloudSize; i++)
                     {
                         p0 << pointCloudOrigin->points[i].x, pointCloudOrigin->points[i].y, pointCloudOrigin->points[i].z, 1;

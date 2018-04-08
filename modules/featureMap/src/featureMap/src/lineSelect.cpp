@@ -89,6 +89,7 @@ int main(int argc, char** argv)
             point.x = gnss_pointcloud2->pose.position.x;
             point.y = gnss_pointcloud2->pose.position.y;
             point.z = gnss_pointcloud2->pose.position.z;
+            //std::cout << "********************************" << point.x << " " << point.y << " " << point.z << std::endl;
             if(!gnss_pointcloud2->LineInformation.isStraight)//curve
             {
                 //if a new curve coming
@@ -206,7 +207,7 @@ int main(int argc, char** argv)
                         u[2] = Direction[0].z;
 
                         l = v.cross(u);
-                        std::cout << "The first rtk odometry heading direction: " << l[0] << " " << l[1] << " " << l[2] << std::endl;
+                        std::cout << "The first rtk odometry heading direction: " << u[0] << " " << u[1] << " " << u[2] << std::endl;
 
                         lvpoint.lineNum = Direction[0].lineNum;
                         lvpoint.x = line_centroid[0].x + l[0];
@@ -233,7 +234,7 @@ int main(int argc, char** argv)
                         u[2] = Direction[1].z;
 
                         l = v.cross(u);
-                        std::cout << "The second rtk odometry heading direction: " << l[0] << " " << l[1] << " " << l[2] << std::endl;
+                        std::cout << "The second rtk odometry heading direction: " << u[0] << " " << u[1] << " " << u[2] << std::endl;
 
                         lvpoint.lineNum = Direction[1].lineNum;
                         lvpoint.x = line_centroid[1].x + l[0];
