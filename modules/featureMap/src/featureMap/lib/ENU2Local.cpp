@@ -104,9 +104,9 @@ Eigen::Matrix4d ENU2Local::ICPWithWeight3D(const cv::Mat &ENUPositions,
     }
 
     //Weighted ICP
-    cv::Mat ENUPositionsMatT = ENUPositionsMat.t();
-    cv::Mat tempMat1 = weightMat * LOAMPositionsMat;
-    cv::Mat tempMat2 = ENUPositionsMatT * tempMat1;
+    cv::Mat LOAMPositionsMatT = LOAMPositionsMat.t();//ENU2LOAM
+    cv::Mat tempMat1 = weightMat * ENUPositionsMat;//LOAM2ENU
+    cv::Mat tempMat2 = LOAMPositionsMatT * tempMat1;//ENU2LOAM
     cv::Mat w;
     cv::Mat u;
     cv::Mat vt;
@@ -123,8 +123,8 @@ Eigen::Matrix4d ENU2Local::ICPWithWeight3D(const cv::Mat &ENUPositions,
     cv::Mat A(3, 3, CV_64F, cv::Scalar::all(0));
     A.at<double>(0, 0) = 1;
     A.at<double>(1, 1) = 1;
-    A.at<double>(2, 2) = cv::determinant(u * vt);
-    cv::Mat R = u * A * vt;
+    A.at<double>(2, 2) = cv::determinant(vt.t() * u.t());//u*vt->vt.t()*u.t()
+    cv::Mat R = vt.t() * A * u.t();//u*A*vt->.
     cv::Mat _LOAMPositionsMat = (cv::Mat_<double> (3,1) <<
                                  _LOAMPositionsX,
                                  _LOAMPositionsY,
